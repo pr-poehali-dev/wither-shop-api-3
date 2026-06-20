@@ -1,19 +1,26 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 
 const TG = 'https://t.me/yokioffical';
 
 type Page = 'home' | 'clicker' | 'donates' | 'cases';
-
-type Upgrade = { id: string; name: string; price: number; power: number; desc: string };
+type ClickUpgrade = { id: string; name: string; price: number; clickBonus: number; perSecBonus: number; emoji: string; desc: string };
+type Privilege = { id: string; name: string; price: number; emoji: string; desc: string };
 type Case = { id: string; name: string; price: number; emoji: string; desc: string };
-type Donate = { id: string; name: string; price: number; emoji: string; desc: string };
 type HistoryItem = { id: number; type: 'donate' | 'case' | 'upgrade'; name: string; price: number; time: string };
 
-const upgrades: Upgrade[] = [
-  { id: 'destroyer', name: 'Сокрушитель', price: 100, power: 5, desc: '+5 minecoin за клик' },
-  { id: 'imperator', name: 'Imperator', price: 10000, power: 250, desc: '+250 minecoin за клик' },
+const clickUpgrades: ClickUpgrade[] = [
+  { id: 'click10', name: 'Усиленный клик', price: 200, clickBonus: 10, perSecBonus: 0, emoji: '👆', desc: '+10 minecoin за каждый клик' },
+  { id: 'auto20', name: 'Авто-добыча', price: 1500, clickBonus: 0, perSecBonus: 20, emoji: '⚙️', desc: '+20 minecoin в секунду автоматически' },
+];
+
+const privileges: Privilege[] = [
+  { id: 'vip', name: 'VIP', price: 500, emoji: '⭐', desc: 'Базовая привилегия' },
+  { id: 'destroyer', name: 'Сокрушитель', price: 100, emoji: '⚔️', desc: 'Привилегия Сокрушитель' },
+  { id: 'legend', name: 'Legend', price: 12000, emoji: '🛡️', desc: 'Легендарный статус' },
+  { id: 'imperator', name: 'Imperator', price: 10000, emoji: '👑', desc: 'Привилегия Imperator' },
+  { id: 'wither', name: 'Wither God', price: 50000, emoji: '💀', desc: 'Высший ранг Wither' },
 ];
 
 const cases: Case[] = [
@@ -22,14 +29,6 @@ const cases: Case[] = [
   { id: 'shulkerbox', name: 'ShulkerBox', price: 9807, emoji: '📦', desc: 'Эксклюзив Shulker' },
 ];
 
-const donates: Donate[] = [
-  { id: 'vip', name: 'VIP', price: 500, emoji: '⭐', desc: 'Базовая привилегия' },
-  { id: 'legend', name: 'Legend', price: 12000, emoji: '🛡️', desc: 'Легендарный статус' },
-  { id: 'wither', name: 'Wither God', price: 50000, emoji: '💀', desc: 'Высший ранг Wither' },
-];
-
-const fmt = (n: number) => n.toLocaleString('ru-RU');
-
 const navItems: { id: Page; label: string; icon: string }[] = [
   { id: 'home', label: 'ГЛАВНАЯ', icon: 'Home' },
   { id: 'clicker', label: 'КЛИКЕР', icon: 'MousePointerClick' },
@@ -37,15 +36,25 @@ const navItems: { id: Page; label: string; icon: string }[] = [
   { id: 'cases', label: 'КЕЙСЫ', icon: 'Package' },
 ];
 
+const fmt = (n: number) => n.toLocaleString('ru-RU');
+
 export default function Index() {
   const [page, setPage] = useState<Page>('home');
   const [coins, setCoins] = useState(50);
   const [perClick, setPerClick] = useState(1);
+  const [perSec, setPerSec] = useState(0);
   const [owned, setOwned] = useState<string[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [pops, setPops] = useState<{ id: number; x: number; y: number }[]>([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const popId = useRef(0);
+
+  // Пассивный доход
+  useEffect(() => {
+    if (perSec === 0) return;
+    const t = setInterval(() => setCoins((c) => c + perSec), 1000);
+    return () => clearInterval(t);
+  }, [perSec]);
 
   const go = (p: Page) => { setPage(p); window.scrollTo({ top: 0 }); };
 
@@ -62,10 +71,11 @@ export default function Index() {
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
   };
 
-  const buyUpgrade = (u: Upgrade) => {
+  const buyClickUpgrade = (u: ClickUpgrade) => {
     if (owned.includes(u.id) || coins < u.price) return;
     setCoins((c) => c - u.price);
-    setPerClick((p) => p + u.power);
+    setPerClick((p) => p + u.clickBonus);
+    setPerSec((p) => p + u.perSecBonus);
     setOwned((o) => [...o, u.id]);
     addHistory('upgrade', u.name, u.price);
   };
@@ -159,7 +169,7 @@ export default function Index() {
             <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
               {[
                 { icon: 'MousePointerClick', title: 'Кликер', desc: 'Добывай minecoin кликами и прокачивай силу', page: 'clicker' as Page },
-                { icon: 'Star', title: 'Донаты', desc: 'Сокрушитель, Imperator и привилегии', page: 'donates' as Page },
+                { icon: 'Star', title: 'Донаты', desc: 'Привилегии: VIP, Сокрушитель, Imperator и другие', page: 'donates' as Page },
                 { icon: 'Package', title: 'Кейсы', desc: 'WitherBox, NetherBox, ShulkerBox', page: 'cases' as Page },
               ].map((c) => (
                 <button
@@ -187,6 +197,7 @@ export default function Index() {
             <p className="text-muted-foreground">Кликай по монете и копи minecoin</p>
           </div>
           <div className="grid lg:grid-cols-2 gap-14 items-center max-w-4xl mx-auto">
+            {/* Coin */}
             <div className="text-center">
               <div className="relative inline-block">
                 <button
@@ -206,35 +217,39 @@ export default function Index() {
                 </button>
               </div>
               <div className="mt-8 font-display text-4xl font-bold">{fmt(coins)} 🪙</div>
-              <div className="text-muted-foreground mt-1">+{perClick} за клик</div>
+              <div className="flex items-center justify-center gap-4 mt-2 text-muted-foreground text-sm">
+                <span>+{perClick} за клик</span>
+                {perSec > 0 && <span className="text-green-600 font-semibold">+{perSec}/сек ⚙️</span>}
+              </div>
             </div>
 
+            {/* Upgrades */}
             <div className="space-y-4">
-              <h3 className="font-display text-xl font-bold">Апгрейды клика</h3>
-              <p className="text-sm text-muted-foreground">Купи апгрейды в разделе Донаты, чтобы кликать сильнее</p>
-              {upgrades.map((u) => {
+              <h3 className="font-display text-xl font-bold">Улучшения клика</h3>
+              {clickUpgrades.map((u) => {
                 const bought = owned.includes(u.id);
+                const canAfford = coins >= u.price;
                 return (
-                  <div key={u.id} className={`flex items-center justify-between p-4 rounded-xl border-2 ${bought ? 'border-primary bg-primary/10' : 'border-border bg-card'}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{bought ? '✅' : '⚡'}</span>
-                      <div>
-                        <div className="font-display font-bold">{u.name}</div>
-                        <div className="text-sm text-muted-foreground">{u.desc}</div>
+                  <div key={u.id} className={`p-5 rounded-2xl border-2 transition-all ${bought ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/40'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{u.emoji}</span>
+                        <div>
+                          <div className="font-display font-bold">{u.name}</div>
+                          <div className="text-sm text-muted-foreground">{u.desc}</div>
+                        </div>
                       </div>
+                      <Button
+                        onClick={() => buyClickUpgrade(u)}
+                        disabled={bought || !canAfford}
+                        className="font-display font-bold tracking-wide shrink-0"
+                      >
+                        {bought ? '✅' : `${fmt(u.price)} 🪙`}
+                      </Button>
                     </div>
-                    {bought
-                      ? <span className="font-semibold text-sm text-primary">Активно</span>
-                      : <Button onClick={() => go('donates')} variant="outline" className="font-display font-bold text-xs">
-                          {fmt(u.price)} 🪙
-                        </Button>
-                    }
                   </div>
                 );
               })}
-              <Button onClick={() => go('donates')} className="w-full font-display font-bold tracking-wide mt-2">
-                <Icon name="ArrowRight" size={16} className="mr-2" /> КУПИТЬ В ДОНАТАХ
-              </Button>
             </div>
           </div>
         </main>
@@ -248,63 +263,29 @@ export default function Index() {
             <p className="text-muted-foreground">Оплата майнкоинами. После покупки — напиши в Telegram</p>
           </div>
 
-          <div className="max-w-4xl mx-auto space-y-12">
-            {/* Upgrades */}
-            <div>
-              <h3 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-                <span>⚡</span> Усиление клика
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-5">
-                {upgrades.map((u) => {
-                  const bought = owned.includes(u.id);
-                  const canAfford = coins >= u.price;
-                  return (
-                    <div key={u.id} className="p-6 rounded-2xl border-2 border-primary/40 bg-card hover:shadow-lg transition-all">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="text-4xl">⚡</div>
-                        <div>
-                          <div className="font-display text-xl font-bold">{u.name}</div>
-                          <div className="text-sm text-muted-foreground">{u.desc}</div>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => buyUpgrade(u)}
-                        disabled={bought || !canAfford}
-                        className="w-full font-display font-bold tracking-wide"
-                      >
-                        {bought ? '✅ КУПЛЕНО' : canAfford ? `КУПИТЬ — ${fmt(u.price)} 🪙` : `НЕ ХВАТАЕТ — ${fmt(u.price)} 🪙`}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Privileges */}
-            <div>
-              <h3 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-                <span>👑</span> Привилегии
-              </h3>
-              <div className="grid sm:grid-cols-3 gap-5">
-                {donates.map((d) => {
-                  const canAfford = coins >= d.price;
-                  return (
-                    <div key={d.id} className="p-6 rounded-2xl border border-border bg-card text-center hover:shadow-lg hover:-translate-y-1 transition-all">
-                      <div className="text-5xl mb-3">{d.emoji}</div>
-                      <div className="font-display text-xl font-bold mb-1">{d.name}</div>
-                      <div className="text-muted-foreground text-sm mb-1">{d.desc}</div>
-                      <div className="font-semibold text-sm mb-4">{fmt(d.price)} minecoin</div>
-                      <Button
-                        onClick={() => purchase('donate', d.name, d.price)}
-                        disabled={!canAfford}
-                        className="w-full font-display font-bold tracking-wide"
-                      >
-                        {canAfford ? 'КУПИТЬ' : 'НЕ ХВАТАЕТ'}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+          <div className="max-w-4xl mx-auto">
+            <h3 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+              <span>👑</span> Привилегии
+            </h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {privileges.map((d) => {
+                const canAfford = coins >= d.price;
+                return (
+                  <div key={d.id} className="p-6 rounded-2xl border border-border bg-card text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div className="text-5xl mb-3">{d.emoji}</div>
+                    <div className="font-display text-xl font-bold mb-1">{d.name}</div>
+                    <div className="text-muted-foreground text-sm mb-1">{d.desc}</div>
+                    <div className="font-semibold text-sm mb-4">{fmt(d.price)} minecoin</div>
+                    <Button
+                      onClick={() => purchase('donate', d.name, d.price)}
+                      disabled={!canAfford}
+                      className="w-full font-display font-bold tracking-wide"
+                    >
+                      {canAfford ? 'КУПИТЬ' : 'НЕ ХВАТАЕТ'}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </main>
@@ -364,10 +345,11 @@ export default function Index() {
                 <Icon name="X" size={20} />
               </button>
             </div>
-            <div className="p-5 rounded-2xl bg-primary/15 mb-6">
+            <div className="p-5 rounded-2xl bg-primary/15 mb-6 space-y-1">
               <div className="text-sm text-muted-foreground">Баланс</div>
               <div className="font-display text-3xl font-bold">{fmt(coins)} 🪙</div>
-              <div className="text-sm text-muted-foreground mt-1">Сила клика: +{perClick}</div>
+              <div className="text-sm text-muted-foreground">За клик: +{perClick}</div>
+              {perSec > 0 && <div className="text-sm text-green-600 font-semibold">Авто: +{perSec}/сек</div>}
             </div>
             <h4 className="font-display font-bold mb-3">История покупок</h4>
             {history.length === 0 ? (
