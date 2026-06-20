@@ -146,26 +146,14 @@ const Index = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-display text-xl font-bold">Прокачка кликера</h3>
-            {upgrades.map((u) => {
-              const bought = owned.includes(u.id);
-              const canAfford = coins >= u.price;
-              return (
-                <div key={u.id} className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                  <div>
-                    <div className="font-display font-bold">{u.name}</div>
-                    <div className="text-sm text-muted-foreground">{u.desc}</div>
-                  </div>
-                  <Button
-                    onClick={() => buyUpgrade(u)}
-                    disabled={bought || !canAfford}
-                    className="font-semibold min-w-28"
-                  >
-                    {bought ? 'Куплено' : `${fmt(u.price)} 🪙`}
-                  </Button>
-                </div>
-              );
-            })}
+            <h3 className="font-display text-xl font-bold">Усиль клик</h3>
+            <p className="text-muted-foreground text-sm">
+              Хочешь добывать больше minecoin за клик? Купи апгрейды Сокрушитель и Imperator
+              в разделе DONATE — они увеличат силу твоего клика.
+            </p>
+            <Button onClick={() => scrollTo('donates')} variant="outline" className="font-display font-bold tracking-wide w-full">
+              <Icon name="ArrowDown" size={18} className="mr-2" /> ПЕРЕЙТИ К ДОНАТАМ
+            </Button>
           </div>
         </div>
       </section>
@@ -177,6 +165,37 @@ const Index = () => {
             <h2 className="font-display text-4xl font-bold mb-2">ДОНАТЫ</h2>
             <p className="text-muted-foreground">Оплата майнкоинами. После покупки — напиши в Telegram</p>
           </div>
+
+          {/* APGRADES — усиление клика */}
+          <div className="max-w-5xl mx-auto mb-12">
+            <h3 className="font-display text-xl font-bold mb-4 text-center">Усиление клика</h3>
+            <div className="grid sm:grid-cols-2 gap-5">
+              {upgrades.map((u) => {
+                const bought = owned.includes(u.id);
+                const canAfford = coins >= u.price;
+                return (
+                  <div key={u.id} className="flex items-center justify-between p-6 rounded-2xl border-2 border-primary/40 bg-card hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">⚡</div>
+                      <div>
+                        <div className="font-display text-lg font-bold">{u.name}</div>
+                        <div className="text-sm text-muted-foreground">{u.desc}</div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => buyUpgrade(u)}
+                      disabled={bought || !canAfford}
+                      className="font-display font-bold tracking-wide min-w-28"
+                    >
+                      {bought ? 'КУПЛЕНО' : `${fmt(u.price)} 🪙`}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <h3 className="font-display text-xl font-bold mb-4 text-center max-w-5xl mx-auto">Привилегии</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
             {donates.map((d) => {
               const canAfford = coins >= d.price;
