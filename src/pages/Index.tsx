@@ -260,33 +260,60 @@ export default function Index() {
         <main className="flex-1 container py-16 animate-fade-in">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl font-bold mb-2">ДОНАТЫ</h2>
-            <p className="text-muted-foreground">Оплата майнкоинами. После покупки — напиши в Telegram</p>
+            <p className="text-muted-foreground">Выбери раздел доната</p>
           </div>
+          <div className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-6">
+            <button
+              onClick={() => go('privileges')}
+              className="p-8 rounded-2xl border-2 border-border bg-card text-center hover:border-primary hover:shadow-xl transition-all"
+            >
+              <div className="text-6xl mb-4">👑</div>
+              <div className="font-display text-2xl font-bold mb-2">Привилегии</div>
+              <div className="text-muted-foreground text-sm">VIP, Сокрушитель, Imperator и другие ранги</div>
+            </button>
+            <button
+              onClick={() => go('cases')}
+              className="p-8 rounded-2xl border-2 border-border bg-card text-center hover:border-primary hover:shadow-xl transition-all"
+            >
+              <div className="text-6xl mb-4">📦</div>
+              <div className="font-display text-2xl font-bold mb-2">Кейсы</div>
+              <div className="text-muted-foreground text-sm">WitherBox, NetherBox, ShulkerBox</div>
+            </button>
+          </div>
+        </main>
+      )}
 
-          <div className="max-w-4xl mx-auto">
-            <h3 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-              <span>👑</span> Привилегии
-            </h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {privileges.map((d) => {
-                const canAfford = coins >= d.price;
-                return (
-                  <div key={d.id} className="p-6 rounded-2xl border border-border bg-card text-center hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div className="text-5xl mb-3">{d.emoji}</div>
-                    <div className="font-display text-xl font-bold mb-1">{d.name}</div>
-                    <div className="text-muted-foreground text-sm mb-1">{d.desc}</div>
-                    <div className="font-semibold text-sm mb-4">{fmt(d.price)} minecoin</div>
-                    <Button
-                      onClick={() => purchase('donate', d.name, d.price)}
-                      disabled={!canAfford}
-                      className="w-full font-display font-bold tracking-wide"
-                    >
-                      {canAfford ? 'КУПИТЬ' : 'НЕ ХВАТАЕТ'}
-                    </Button>
-                  </div>
-                );
-              })}
+      {/* PAGE: PRIVILEGES */}
+      {page === 'privileges' && (
+        <main className="flex-1 container py-16 animate-fade-in">
+          <div className="flex items-center gap-3 mb-10 max-w-4xl mx-auto">
+            <button onClick={() => go('donates')} className="p-2 hover:bg-secondary rounded-lg transition-colors">
+              <Icon name="ArrowLeft" size={20} />
+            </button>
+            <div>
+              <h2 className="font-display text-3xl font-bold">Привилегии</h2>
+              <p className="text-muted-foreground text-sm">После покупки — напиши в Telegram @yokioffical</p>
             </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            {privileges.map((d) => {
+              const canAfford = coins >= d.price;
+              return (
+                <div key={d.id} className="p-6 rounded-2xl border border-border bg-card text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+                  <div className="text-5xl mb-3">{d.emoji}</div>
+                  <div className="font-display text-xl font-bold mb-1">{d.name}</div>
+                  <div className="text-muted-foreground text-sm mb-1">{d.desc}</div>
+                  <div className="font-semibold text-sm mb-4">{fmt(d.price)} minecoin</div>
+                  <Button
+                    onClick={() => purchase('donate', d.name, d.price)}
+                    disabled={!canAfford}
+                    className="w-full font-display font-bold tracking-wide"
+                  >
+                    {canAfford ? 'КУПИТЬ' : 'НЕ ХВАТАЕТ'}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </main>
       )}
